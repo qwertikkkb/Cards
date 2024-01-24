@@ -9,13 +9,18 @@ import SwiftUI
 
 struct CardView: View {
     
-    var card: Card
+    @State private var fadeIn = false
+    @State private var moveDownward = false
+    @State private var moveUpword = false
+    @State private var showAlert = false
     
-    var gradient: [Color] = [Color("Color01"), Color("Color02")]
+    var card: Card
+    var hapticImpact = UIImpactFeedbackGenerator(style: .heavy)
     
     var body: some View {
         ZStack {
             Image(card.imageName)
+                .opacity(fadeIn ? 1.0 : 0.0)
             
             VStack{
                 Text(card.title)
@@ -30,10 +35,12 @@ struct CardView: View {
                     .italic()
                 
             }//VStack
-            .offset(y: -218)
+            .offset(y: moveDownward ? -217 : 300)
             
             Button(action: {
                 playSound(sound: "sound-chime", type: "mp3")
+                self.hapticImpact.impactOccurred()
+                self.showAlert.toggle()
             }) {
                 HStack {
                     Text(card.callToAction.uppercased())
@@ -53,13 +60,29 @@ struct CardView: View {
                     .shadow(color: Color("ColorShadow"), radius: 6, x: 0, y: 3)
                 )
             }
-            .offset(y: 210)
+            .offset(y: moveUpword ? 210 : 300)
             
         }//ZStack
         .frame(width: 335, height: 545)
         .background(LinearGradient(colors: card.gradientColors, startPoint: .top, endPoint: .bottom))
         .cornerRadius(16)
         .shadow(radius: 8)
+        .onAppear() {
+            withAnimation(.linear(duration: 1.2)) {
+                self.fadeIn.toggle()
+            }
+            withAnimation(.linear(duration: 0.8)) {
+                self.moveDownward.toggle()
+                self.moveUpword.toggle()
+            }
+        }
+        .alert(isPresented: $showAlert) {
+            Alert(
+                title: Text(card.title),
+                message: Text(card.message),
+                dismissButton: .default(Text("OK"))
+            )
+        }
     }
 }
 
